@@ -1,0 +1,14 @@
+{
+  "model": "Qwen3.5-9B-GGUF",
+  "n": 50,
+  "json_mode": false,
+  "thinking_off": {
+    "success_rate": 1.0,
+    "outcomes": {
+      "ok": 50
+    },
+    "latency_median_s": 4.65,
+    "latency_max_s": 12.71,
+    "error_samples": []
+  }
+}

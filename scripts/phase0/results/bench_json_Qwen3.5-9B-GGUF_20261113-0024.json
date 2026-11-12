@@ -1,0 +1,19 @@
+{
+  "model": "Qwen3.5-9B-GGUF",
+  "n": 20,
+  "json_mode": false,
+  "thinking_on": {
+    "success_rate": 0.85,
+    "outcomes": {
+      "ok": 17,
+      "request:TimeoutError": 3
+    },
+    "latency_median_s": 145.51,
+    "latency_max_s": 294.11,
+    "error_samples": [
+      "timed out",
+      "timed out",
+      "timed out"
+    ]
+  }
+}

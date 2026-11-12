@@ -20,6 +20,7 @@ from app.db import make_session
 from app.ingest.pipeline import INGESTIBLE_SOURCES, ingest_source
 from app.llm.chat import make_chat
 from app.llm.embeddings import make_embedder
+from app.llm.errors import ModelServerError
 from app.qa import answer_question
 from app.search import search
 
@@ -110,7 +111,14 @@ def cmd_qa_eval(args: argparse.Namespace) -> int:
     with make_session() as session:
         for q in questions:
             start = time.perf_counter()
-            result = answer_question(session, embedder, chat, q["question"], k=args.k)
+            try:
+                result = answer_question(session, embedder, chat, q["question"], k=args.k)
+            except ModelServerError as exc:
+                secs = time.perf_counter() - start
+                lines.append(f"| {q['id']} | 오류 | 오류 | {secs:.1f} |")
+                details += [f"## {q['id']}. {q['question']}", "", f"오류: {exc}", ""]
+                print(f"{q['id']} error: {exc}", flush=True)
+                continue
             secs = time.perf_counter() - start
             cited = {int(n) for n in _CITATION.findall(result.answer)}
             cited_files = {
