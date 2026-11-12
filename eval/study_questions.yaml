@@ -1,0 +1,63 @@
+# Retrieval eval set for demo-data/study (Phase 1).
+# expected_heading is a substring of a heading in expected_file; a hit means a
+# retrieved chunk from expected_file whose heading_path contains it.
+- id: q01
+  question: "태그 배열 컬럼에 특정 태그가 들어 있는 노트를 빨리 찾으려면 어떤 종류의 인덱스를 써야 해?"
+  expected_file: "postgres-indexes.md"
+  expected_heading: "GIN 인덱스"
+  note: "paraphrase; B-tree section in the same file is a near distractor"
+- id: q02
+  question: "파일명에 해시가 들어간 JS 번들은 왜 1년 동안 캐시해도 문제가 없을까?"
+  expected_file: "http-caching.md"
+  expected_heading: "빌드 파일 전략"
+  note: "paraphrase of immutable/max-age strategy"
+- id: q03
+  question: "LEFT JOIN을 썼는데 오른쪽에 매칭 안 되는 행들이 결과에서 사라졌어. 왜 그런 거야?"
+  expected_file: "sql-joins.md"
+  expected_heading: "ON과 WHERE의 차이"
+  note: "paraphrase; answer is putting the right-table condition in ON"
+- id: q04
+  question: "Postgres의 기본 격리 수준은 뭐고, Read Uncommitted로 설정하면 실제로 어떻게 동작해?"
+  expected_file: "transactions-isolation.md"
+  expected_heading: "Postgres의 특징"
+  note: "mostly reuses section wording; isolation table section is a distractor"
+- id: q05
+  question: "SQLAlchemy에서 부모를 먼저 조회한 뒤 자식을 IN 쿼리 한 번으로 묶어 가져오는 로딩 옵션은?"
+  expected_file: "n-plus-one.md"
+  expected_heading: "selectinload"
+  note: "joinedload section is the close distractor"
+- id: q06
+  question: "워커가 죽으면 같은 작업이 다시 실행될 수 있다는데, 작업 코드는 어떻게 짜야 안전해?"
+  expected_file: "message-queues-background-jobs.md"
+  expected_heading: "at-least-once"
+  note: "paraphrase; idempotency also appears in http-basics.md (cross-note distractor)"
+- id: q07
+  question: "API 컨테이너에서 DB 주소를 localhost로 적었더니 연결이 안 돼. 뭘 써야 해?"
+  expected_file: "docker-compose.md"
+  expected_heading: "서비스 간 네트워크"
+  note: "paraphrase; answer is the service name (db) as hostname"
+- id: q08
+  question: "docker stop을 하면 앱이 바로 안 꺼지고 항상 10초쯤 기다렸다가 강제로 죽는 이유는?"
+  expected_file: "linux-process-permissions.md"
+  expected_heading: "PID 1"
+  note: "paraphrase; shell-form CMD swallowing SIGTERM"
+- id: q09
+  question: "Why is it better to create an IVFFlat index only after the table already contains data?"
+  expected_file: "pgvector-hnsw-ivfflat.md"
+  expected_heading: "IVFFlat 인덱스"
+  note: "English question (cross-lingual); HNSW section is a distractor"
+- id: q10
+  question: "Which retrieval metric gives more credit when the correct chunk is ranked first rather than third?"
+  expected_file: "rag-evaluation.md"
+  expected_heading: "MRR (Mean Reciprocal Rank)"
+  note: "English question (cross-lingual); paraphrase without naming the metric"
+- id: q11
+  question: "function calling에서 실제로 도구 함수를 실행하는 건 LLM이야, 내 애플리케이션 코드야?"
+  expected_file: "llm-tool-calling-agents.md"
+  expected_heading: "모델은 함수를 실행하지 않는다"
+  note: "paraphrase; MCP note also discusses tools (distractor)"
+- id: q12
+  question: "제목만 보면 무슨 내용인지 모르는 짧은 섹션 청크의 검색 품질을 높이려면 임베딩 입력을 어떻게 구성하면 좋아?"
+  expected_file: "chunking-strategies.md"
+  expected_heading: "제목 경로를 청크에 넣을까"
+  note: "paraphrase; rag-pipeline-overview.md mentions heading paths too"
