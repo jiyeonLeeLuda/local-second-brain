@@ -1,0 +1,130 @@
+.card {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  scroll-margin-top: 16px;
+  transition: border-color 200ms ease, background-color 200ms ease;
+}
+
+.card:focus {
+  outline: none;
+}
+
+.card[data-active] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
+  animation: flash 900ms ease-out;
+}
+
+.card[data-uncited] {
+  opacity: 0.8;
+}
+
+@keyframes flash {
+  from {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.badge {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.meta p {
+  margin: 0;
+}
+
+.file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.dir {
+  color: var(--text-faint);
+  font-weight: 400;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.heading {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.score {
+  flex: none;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.text {
+  margin: 10px 0 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.footer:empty {
+  display: none;
+}
+
+.note {
+  margin-right: auto;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}
+
+.toggle {
+  margin-top: 6px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 0.8125rem;
+}
+
+.toggle:hover {
+  text-decoration: underline;
+}

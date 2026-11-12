@@ -1,0 +1,77 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  margin: 8px 0 0;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.question {
+  margin: -6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+}
+
+.answer {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.citeGroup {
+  display: inline-flex;
+  gap: 2px;
+  margin: 0 1px;
+  vertical-align: 0.35em;
+}
+
+.cite {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.cite:hover,
+.cite[data-active] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.citeMissing {
+  color: var(--text-faint);
+}
+
+.sources {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}

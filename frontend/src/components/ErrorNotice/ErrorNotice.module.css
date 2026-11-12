@@ -1,0 +1,29 @@
+.notice {
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+}
+
+.notice p {
+  margin: 0;
+}
+
+.title {
+  color: var(--danger);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.detail {
+  margin-top: 4px !important;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+}
+
+.hint {
+  margin-top: 6px !important;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
