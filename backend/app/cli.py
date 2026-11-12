@@ -8,7 +8,9 @@ uv run python -m app.cli eval ../eval/study_questions.yaml --k 5
 
 import argparse
 import json
+import re
 import sys
+import time
 from pathlib import Path
 
 import yaml
@@ -90,6 +92,57 @@ def cmd_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+_CITATION = re.compile(r"\[(\d+)\]")
+
+
+def cmd_qa_eval(args: argparse.Namespace) -> int:
+    """Answer every question and write a Markdown report for manual review."""
+    settings = get_settings()
+    questions = yaml.safe_load(Path(args.file).read_text(encoding="utf-8"))[: args.limit]
+    embedder, chat = make_embedder(settings), make_chat(settings)
+    lines = [
+        f"# Q&A run: {chat.model_name} / {embedder.model_name}",
+        "",
+        "| id | 인용 있음 | 정답 파일 인용 | 시간(s) |",
+        "|---|---|---|---|",
+    ]
+    details, cited_any, cited_expected = [], 0, 0
+    with make_session() as session:
+        for q in questions:
+            start = time.perf_counter()
+            result = answer_question(session, embedder, chat, q["question"], k=args.k)
+            secs = time.perf_counter() - start
+            cited = {int(n) for n in _CITATION.findall(result.answer)}
+            cited_files = {
+                result.sources[n - 1].file_path for n in cited if 0 < n <= len(result.sources)
+            }
+            has_cite = bool(cited_files)
+            has_expected = any(f.endswith("/" + q["expected_file"]) for f in cited_files)
+            cited_any += has_cite
+            cited_expected += has_expected
+            lines.append(
+                f"| {q['id']} | {'O' if has_cite else 'X'} | {'O' if has_expected else 'X'} | {secs:.1f} |"
+            )
+            details += [f"## {q['id']}. {q['question']}", "", result.answer, ""]
+            details += [
+                f"- [{i}] {h.file_path} — {h.heading_path} ({h.score:.3f})"
+                for i, h in enumerate(result.sources, start=1)
+            ]
+            details.append("")
+            print(f"{q['id']} cite={has_cite} expected={has_expected} {secs:.1f}s", flush=True)
+    n = len(questions) or 1
+    lines += [
+        "",
+        f"인용 포함 {cited_any}/{len(questions)} ({cited_any / n:.0%}), "
+        f"정답 파일 인용 {cited_expected}/{len(questions)} ({cited_expected / n:.0%})",
+        "",
+        *details,
+    ]
+    Path(args.out).write_text("\n".join(lines), encoding="utf-8")
+    print(f"saved: {args.out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -113,6 +166,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("file")
     p.add_argument("--k", type=int, default=5)
     p.set_defaults(func=cmd_eval)
+
+    p = sub.add_parser("qa-eval", help="answer a question set and write a Markdown report")
+    p.add_argument("file")
+    p.add_argument("--out", default="qa_report.md")
+    p.add_argument("--limit", type=int, default=10)
+    p.add_argument("--k", type=int, default=5)
+    p.set_defaults(func=cmd_qa_eval)
 
     args = parser.parse_args(argv)
     return args.func(args)

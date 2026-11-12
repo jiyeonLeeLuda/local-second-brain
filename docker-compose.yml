@@ -1,0 +1,51 @@
+# Mac mini (production) stack. Usage: cp .env.example .env && ./deploy.sh
+# Lemonade runs natively on the host; containers reach it via host.docker.internal.
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lsb
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: lsb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lsb -d lsb"]
+      interval: 5s
+      retries: 10
+    # No published port: only the backend container talks to the DB.
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://lsb:${POSTGRES_PASSWORD}@db:5432/lsb
+      NOTES_DIR: /notes
+      LLM_BASE_URL: ${DOCKER_LLM_BASE_URL:-http://host.docker.internal:13305/api/v1}
+      EMBED_BASE_URL: ${DOCKER_EMBED_BASE_URL:-http://host.docker.internal:13305/api/v1}
+    volumes:
+      # Read-only mount: the app physically cannot modify or delete your notes.
+      - ${HOST_NOTES_DIR:-./demo-data}:/notes:ro
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Next.js fixes rewrite targets at build time.
+        BACKEND_URL: http://backend:8000
+    restart: unless-stopped
+    depends_on: [backend]
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:3000:3000"
+
+volumes:
+  pgdata:
