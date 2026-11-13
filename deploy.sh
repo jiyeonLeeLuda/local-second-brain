@@ -13,6 +13,13 @@ fi
 cd "$(dirname "$0")"
 [[ -f .env ]] || { echo "missing .env (cp .env.example .env and edit it)"; exit 1; }
 grep -qE '^BIND_ADDR=0\.0\.0\.0' .env && { echo "refusing BIND_ADDR=0.0.0.0 (plan §12)"; exit 1; }
+# The password is embedded in the DB URL, so URL-special characters (@ : / # % ...) break it.
+pw=$(grep -E '^POSTGRES_PASSWORD=' .env | head -1 | cut -d= -f2- | sed -E "s/^['\"]//; s/['\"]$//")
+if [[ -z "$pw" || ! "$pw" =~ ^[A-Za-z0-9._~-]+$ ]]; then
+  echo "POSTGRES_PASSWORD must be set and use only letters, digits, . _ ~ -"
+  echo "  generate one: openssl rand -hex 24"
+  exit 1
+fi
 
 git pull --ff-only
 docker compose up -d --build
