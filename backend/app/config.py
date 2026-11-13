@@ -25,11 +25,15 @@ class Settings(BaseSettings):
     # Storage
     database_url: str = "postgresql+psycopg://localhost:5432/lsb_dev"
     notes_dir: Path = REPO_DIR / "demo-data"
+    # Optional per-source folders, relative to notes_dir (or absolute), e.g. an Obsidian
+    # vault: SOURCE_DIRS='{"journal": "<morning-page-folder>", "study": "<notes-folder>"}'.
+    # Sources not listed default to notes_dir/<source_type>.
+    source_dirs: dict[str, str] = {}
 
     # OpenAI-compatible model server (Lemonade, llama-server, Ollama, LM Studio ...)
     llm_base_url: str = "http://localhost:13305/api/v1"
     llm_api_key: str = "local"
-    llm_model: str = "Qwen3-8B-GGUF"
+    llm_model: str = "Qwen3.5-9B-GGUF"
     llm_timeout_s: float = 120.0
     llm_disable_thinking: bool = True
 
@@ -38,7 +42,7 @@ class Settings(BaseSettings):
     embed_provider: Literal["openai", "hash"] = "openai"
     embed_base_url: str = "http://localhost:13305/api/v1"
     embed_api_key: str = "local"
-    embed_model: str = "bge-m3"
+    embed_model: str = "Qwen3-Embedding-0.6B-GGUF"
     embed_dim: int = 1024
     embed_batch_size: int = 32
 
@@ -51,6 +55,13 @@ class Settings(BaseSettings):
 
     # Web
     cors_origins: list[str] = ["http://localhost:3000"]
+
+    def source_root(self, source_type: str) -> Path:
+        configured = self.source_dirs.get(source_type)
+        if not configured:
+            return self.notes_dir / source_type
+        path = Path(configured).expanduser()
+        return path if path.is_absolute() else self.notes_dir / path
 
 
 @lru_cache

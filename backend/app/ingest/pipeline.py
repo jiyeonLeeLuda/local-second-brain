@@ -85,7 +85,7 @@ def ingest_source(
         )
 
     report = IngestReport(source_type=source_type)
-    root = settings.notes_dir / source_type
+    root = settings.source_root(source_type)
     chunker = CHUNKERS[source_type]
     existing = {
         e.file_path: e

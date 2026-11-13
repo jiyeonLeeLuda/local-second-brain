@@ -45,12 +45,35 @@ cd backend && uv run pytest        # lsb_test DB 사용
 cd frontend && npm test && npm run lint && npm run typecheck
 ```
 
+## 개인 기록 보호
+
+이 레포는 공개 레포입니다. 일기와 개인 노트는 **별도 비공개 레포(옵시디언 볼트)**에 두고, 앱은 그 폴더를 읽기만 합니다.
+
+```
+~/local-second-brain   공개. 코드와 데모 데이터만
+~/<vault>              비공개. 모닝페이지, 개인 노트
+```
+
+세 겹으로 막습니다.
+
+1. **구조**: 볼트는 이 레포 밖에 있고 `.gitignore`도 일기 폴더 패턴을 무시합니다. 앱은 볼트를 읽기 전용으로 마운트합니다.
+2. **커밋 전 검사**: `scripts/privacy_guard.py`가 일기 폴더의 파일, `source_type: journal`인 노트, `.env`, 개인 경로를 막습니다. 클론한 기기마다 한 번 설치합니다.
+   ```bash
+   git config core.hooksPath scripts/git-hooks
+   # 실제 개인 폴더 이름과 경로는 공개되지 않는 로컬 파일에 적습니다(.gitignore 대상)
+   printf '%s\n' '<vault-folder-name>' '<morning-page-folder>' > .private-patterns
+   ```
+3. **CI 재검사**: GitHub Actions가 푸시마다 같은 검사를 다시 돌립니다.
+
+데모용 일기가 필요하면 `demo-data/journal/`에 `synthetic: true` frontmatter를 붙인 합성 데이터만 둡니다.
+
 ## Mac mini에서 실행
 
 ```bash
 git clone https://github.com/jiyeonLeeLuda/local-second-brain.git ~/local-second-brain
 cd ~/local-second-brain
-cp .env.example .env   # POSTGRES_PASSWORD, HOST_NOTES_DIR=/Users/<you>/Notes, EMBED_* 설정
+git config core.hooksPath scripts/git-hooks
+cp .env.example .env   # POSTGRES_PASSWORD, HOST_NOTES_DIR=<볼트 경로>, SOURCE_DIRS, EMBED_* 설정
 ./scripts/phase0/check_model_server.sh localhost   # 모델 서버 주소, 임베딩 차원 확인
 ./deploy.sh            # git pull + docker compose up -d --build
 ```

@@ -24,3 +24,10 @@ node_modules/
 # Editors
 .vscode/
 .idea/
+
+# Personal records must never enter this public repo (see scripts/privacy_guard.py)
+.private-patterns
+.obsidian/
+/journal/
+*morning_page*/
+*morning-page*/

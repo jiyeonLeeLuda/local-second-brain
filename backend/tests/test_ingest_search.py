@@ -135,3 +135,20 @@ def test_evaluate_retrieval_metrics():
     out = evaluate_retrieval(questions, lambda q, k: results[q], k=5)
     assert out["hit_rate"] == pytest.approx(2 / 3)
     assert out["mrr"] == pytest.approx((1 + 0.5 + 0) / 3)
+
+
+def test_source_dirs_map_sources_to_vault_folders(session, settings, embedder, notes_dir):
+    write_note(
+        notes_dir / "02_notes" / "ai", "rag.md", "# RAG\n\n## 개요\n\n검색 후 생성하는 방식이다."
+    )
+    write_note(notes_dir / "study", "ignored.md", "# 이 폴더는 매핑 때문에 안 읽힌다")
+    mapped = settings.model_copy(update={"source_dirs": {"study": "02_notes"}})
+    report = ingest_source(session, mapped, "study", embedder)
+    assert report.scanned == 1
+    assert session.scalar(select(Entry.file_path)) == "ai/rag.md"
+
+
+def test_source_dirs_accept_absolute_paths(settings, tmp_path):
+    mapped = settings.model_copy(update={"source_dirs": {"memo": str(tmp_path / "elsewhere")}})
+    assert mapped.source_root("memo") == tmp_path / "elsewhere"
+    assert mapped.source_root("study") == settings.notes_dir / "study"
