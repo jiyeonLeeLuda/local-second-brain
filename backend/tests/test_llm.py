@@ -97,3 +97,22 @@ def test_chat_http_error_becomes_model_server_error():
 
 def test_strip_thinking_when_open_tag_missing():
     assert strip_thinking("reasoning...</think>\n\n최종 답") == "최종 답"
+
+
+def test_query_instruction_is_added_to_queries_only():
+    seen = []
+
+    def handler(request):
+        body = json.loads(request.content)
+        seen.extend(body["input"])
+        return httpx.Response(
+            200,
+            json={
+                "data": [{"index": i, "embedding": [1.0, 0, 0]} for i in range(len(body["input"]))]
+            },
+        )
+
+    e = OpenAIEmbedder(_settings(embed_query_instruction="Q: "), client=_client(handler))
+    e.embed(["passage"])
+    e.embed_query("question")
+    assert seen == ["passage", "Q: question"]

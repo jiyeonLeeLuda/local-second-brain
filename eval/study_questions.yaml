@@ -61,3 +61,18 @@
   expected_file: "chunking-strategies.md"
   expected_heading: "제목 경로를 청크에 넣을까"
   note: "paraphrase; rag-pipeline-overview.md mentions heading paths too"
+- id: q13
+  question: "컨테이너 종료가 느린 이유"
+  expected_file: "linux-process-permissions.md"
+  expected_heading: "PID 1"
+  note: "짧고 모호한 검색어. 본문은 docker stop, SIGTERM, PID 1로 설명"
+- id: q14
+  question: "토큰 로그아웃"
+  expected_file: "auth-session-vs-jwt.md"
+  expected_heading: ""
+  note: "두 단어짜리 검색어. JWT 폐기 문제"
+- id: q15
+  question: "벡터 인덱스 종류"
+  expected_file: "pgvector-hnsw-ivfflat.md"
+  expected_heading: ""
+  note: "짧은 검색어. HNSW와 IVFFlat"

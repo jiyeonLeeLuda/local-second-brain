@@ -45,6 +45,13 @@ class Settings(BaseSettings):
     embed_model: str = "Qwen3-Embedding-0.6B-GGUF"
     embed_dim: int = 1024
     embed_batch_size: int = 32
+    # Prepended to search queries only (not to stored passages). Qwen3-Embedding is trained
+    # with this query format; it lifted MRR 0.817 -> 0.900 on the demo eval set.
+    # Set to an empty string for embedding models that don't use instructions.
+    embed_query_instruction: str = (
+        "Instruct: Given a question, retrieve passages from personal study notes "
+        "that answer it\nQuery: "
+    )
 
     # Chunking
     chunk_max_chars: int = 1200

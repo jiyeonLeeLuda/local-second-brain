@@ -41,7 +41,7 @@ def search(
     session: Session, embedder: Embedder, query: str, *, mode: str = "study_qa", k: int = 5
 ) -> list[SearchHit]:
     sources = MODE_SOURCES[mode]
-    query_vec = embedder.embed([query])[0]
+    query_vec = embedder.embed_query(query)
     distance = Chunk.embedding.cosine_distance(query_vec)
 
     # Filtered HNSW scans can return fewer than k rows; let pgvector keep scanning.

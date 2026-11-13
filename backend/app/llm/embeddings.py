@@ -26,6 +26,8 @@ class Embedder(Protocol):
 
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
+    def embed_query(self, text: str) -> list[float]: ...
+
 
 class HashEmbedder:
     def __init__(self, dim: int):
@@ -57,12 +59,16 @@ class HashEmbedder:
     def embed(self, texts: list[str]) -> list[list[float]]:
         return [self._vector(t) for t in texts]
 
+    def embed_query(self, text: str) -> list[float]:
+        return self._vector(text)
+
 
 class OpenAIEmbedder:
     def __init__(self, settings: Settings, client: httpx.Client | None = None):
         self.model_name = settings.embed_model
         self.dim = settings.embed_dim
         self.batch_size = settings.embed_batch_size
+        self.query_instruction = settings.embed_query_instruction
         self._client = client or httpx.Client(
             base_url=settings.embed_base_url.rstrip("/") + "/",
             headers={"Authorization": f"Bearer {settings.embed_api_key}"},
@@ -85,6 +91,10 @@ class OpenAIEmbedder:
                 f"but EMBED_DIM={self.dim}. Update EMBED_DIM and re-run migrations."
             )
         return vectors
+
+    def embed_query(self, text: str) -> list[float]:
+        """Queries get the model's retrieval instruction; stored passages do not."""
+        return self.embed([self.query_instruction + text])[0]
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         out: list[list[float]] = []
