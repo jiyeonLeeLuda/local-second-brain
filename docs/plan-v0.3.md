@@ -1,6 +1,7 @@
 # 프로젝트 개발 계획서 v0.3 (통합본)
 
 작성일: 2026-11-12
+개정: 2026-11-13 v0.3.1 사실 정정(노트 경로, 사용 모델, Phase 0~1 완료 표시). 설계 내용은 바꾸지 않음
 가칭: Serendipity Journal
 
 ---
@@ -56,22 +57,22 @@
 ## 5. 환경과 제약
 
 - 하드웨어: Mac mini M4, 통합 메모리 24GB
-- 로컬 모델: Qwen3 8B(메인 생성, 구조화 추출), Gemma 3 4B(분류, 필터, 질문 재작성)
-- 추론 서버: Lemonade 설치 완료, 웹서버로 채팅 일상 사용 중. macOS 지원은 llama.cpp Metal 기반 베타. 임베딩 엔드포인트 제공 여부는 미확인
+- 로컬 모델(사용 중): Qwen3.5-9B-GGUF(메인 생성, 구조화 추출). 추론(thinking)은 `chat_template_kwargs`로 끔(ADR 0004). 초안의 후보였던 Qwen3 8B, Gemma 3 4B는 설치하지 않음
+- 추론 서버: Lemonade 2026.45.3(맥미니). OpenAI 호환 경로(`/api/v1`)와 임베딩 엔드포인트 확인 완료. LLM은 한 번에 1개만 로드되고 다른 모델 요청 시 교체됨, 임베딩 슬롯은 별도
 - 대안 서버: llama.cpp의 llama-server(`--embedding`), Ollama, LM Studio
-- 임베딩 모델 후보: bge-m3(다국어), Qwen3-Embedding 계열(검증 필요)
+- 임베딩 모델(사용 중): Qwen3-Embedding-0.6B-GGUF(1024차원). 검색 질문에만 지시문을 붙임(ADR 0007). 초안의 후보였던 bge-m3는 쓰지 않음
 - 백엔드: FastAPI(Python) / 프론트엔드: Next.js(TypeScript) / 컨테이너: Docker(OrbStack)
 - 원격 접속: 인바운드 포트를 열지 않고 Tailscale 사용
 
 ### 5-1. 개발·운영 환경 분리
 
 - **맥북 = 개발 환경**: 오르카로 코딩. demo-data와 개발용 Postgres(Docker)로만 테스트
-- **맥미니 = 운영 서버**: 화면 없이 상시 가동. 실제 개인 기록(`~/Notes`), 운영용 Postgres, Lemonade(LLM·임베딩 서버) 실행
+- **맥미니 = 운영 서버**: 화면 없이 상시 가동. 실제 개인 기록(비공개 볼트, 별도 비공개 레포로 동기화. `.env`의 `HOST_NOTES_DIR`를 컨테이너 `/notes`에 읽기 전용으로 마운트하고, 소스별 폴더는 `SOURCE_DIRS`로 `NOTES_DIR` 기준 상대 경로 또는 절대 경로로 지정), 운영용 Postgres, Lemonade(LLM·임베딩 서버) 실행
 - **코드 이동**: 맥북에서 `git push` → 맥미니에서 `git pull` 후 `docker compose up -d --build`. 처음엔 `deploy.sh` 한 줄 스크립트로 시작하고, 자동 배포(GitHub Actions)는 나중에 선택
 - **모델 호출**: 맥북 개발 중에도 LLM과 임베딩은 맥미니 Lemonade를 Tailscale 주소로 호출. `LLM_BASE_URL`, `EMBED_BASE_URL` 환경변수로 기기별 주소만 다르게 설정
 - **DB 스키마 동기화**: 맥북·맥미니 DB는 분리하고 마이그레이션 도구(Alembic)로 구조만 맞춤. 맥북에서 운영 DB를 직접 건드리지 않음
 
-### 5-2. 맥미니 원격 운영 준비 현황 (2026-11-12 기준)
+### 5-2. 맥미니 원격 운영 준비 현황 (2026-11-13 기준)
 
 | 항목 | 상태 |
 |---|---|
@@ -79,7 +80,7 @@
 | 화면 공유 접속 | 완료 |
 | 절전 해제 | 완료 |
 | 정전 후 자동 시작 | 완료 |
-| Tailscale 설치 (맥북, 맥미니) | **미완료** |
+| Tailscale 설치 (맥북, 맥미니) | 완료 (로그인 시 자동 실행 포함) |
 | SSH 키 기반 접속 정리 | 확인 필요 |
 | Lemonade 외부(Tailscale 망) 접속 허용 | 미확인 |
 
@@ -113,7 +114,7 @@
 1. 인벤토리: 형식, 개수, 용량, 인코딩, 날짜 정보 집계
 2. 정규화: UTF-8 통일, txt → md, frontmatter 최소 필드(date, source_type, tags) 보강. 날짜가 없으면 파일 수정일 사용 후 date_confidence=low
 3. 중복 탐지: 해시 기반 완전 중복, 임베딩 기반 유사 중복은 후보로만 제시
-4. 분류 제안: Gemma 3 4B가 source_type과 태그 제안, 사용자 일괄 승인
+4. 분류 제안: 로컬 LLM이 source_type과 태그 제안, 사용자 일괄 승인
 5. 민감도 라벨링: 규칙(폴더, 키워드)과 LLM 판정 병행, 불확실하면 private
 6. 개인정보 패턴 검사(계정, 금융정보, 타인 연락처 등) 후 경고
 
@@ -159,9 +160,9 @@
 
 - 범위: 웹 검색 없음. 맥미니 로컬 MD(memo, study, 승인된 research) 안에서만 조사
 - 구현: 에이전트 루프가 아니라 고정 워크플로 + 작업 큐(8B급 로컬 모델에서 더 안정적이라는 판단, 검증 필요)
-  1. 질문을 여러 검색어로 확장(Gemma 3 4B)
+  1. 질문을 여러 검색어로 확장(로컬 LLM)
   2. 검색어별 DB 검색, 결과 병합과 중복 제거
-  3. 출처와 함께 정리(Qwen3 8B), 출처 없는 주장 금지
+  3. 출처와 함께 정리(Qwen3.5-9B), 출처 없는 주장 금지
   4. `inbox/research/날짜-주제.md`로 저장(agent-generated, approved=false)
   5. 완료 알림
 - 입구: 웹 화면, 직접 만든 텔레그램 봇, 또는 하네스(선택)
@@ -205,7 +206,7 @@
 **3단계. 비교**
 헤르메스(Python, MIT) 소스에서 같은 역할의 코드를 찾아 설계 비교. 헤르메스 문서는 모드 4(영어 문서)의 첫 학습 자료로 사용
 
-**실험**: 같은 에이전트 작업을 Qwen3 8B와 Gemma 3 4B, thinking on/off로 돌려 성공률과 실패 유형 기록
+**실험**: 같은 에이전트 작업을 Qwen3.5-9B와 다른 로컬 모델(예: Gemma-4-26B-A4B), thinking on/off로 돌려 성공률과 실패 유형 기록
 
 ## 14. 개발 단계
 
@@ -214,18 +215,20 @@
 **지금 바로(개발과 무관)**: 모닝페이지를 `날짜.md`로 타이핑하기 시작. 모드 1은 데이터가 몇 주 쌓여야 의미가 있음
 
 **Phase 0. 환경 검증**
-- 레포 생성(맥북), `docs/plan-v0.3.md` 첫 커밋, GitHub 비공개 업로드, 맥미니에서 clone
-- 맥미니에 `~/Notes/{journal,memo,study,inbox/research}` 폴더 생성
+- **완료 (2026-11-13)**: Lemonade의 채팅·임베딩 API 호출 성공, thinking off로 한 문장 답변 68.2초→2.7초, JSON 구조화 출력 50/50(thinking off), Tailscale 설치, 맥미니 Docker 배포 동작. 상세: [측정 결과](results/phase0-phase1.md), [설계 결정 기록](adr/README.md)
+- 레포 생성(맥북), `docs/plan-v0.3.md` 첫 커밋, GitHub 업로드(2026-11-12 공개 레포로 전환), 맥미니에서 clone
+- 맥미니에 비공개 볼트를 clone하고 `.env`의 `HOST_NOTES_DIR`, `SOURCE_DIRS`로 소스별 폴더(journal, memo, study, inbox/research) 지정
 - Tailscale 설치(맥북, 맥미니) 및 같은 계정으로 연결
 - Lemonade가 localhost에서만 요청을 받는지 확인하고, 필요 시 Tailscale 망에서만 접근되도록 설정
 - 맥북에서 Tailscale 주소로 맥미니 Lemonade에 curl 호출 성공
 - Lemonade의 OpenAI 호환 경로 확인(모델 목록 조회 포함), 임베딩 엔드포인트 확인. 불가 시 llama-server 분리 운영과 extra_models_dir 모델 공유 확인
 - 생성 모델 2개 + 임베딩 모델 동시 로딩 시 메모리와 응답 시간 실측
-- Qwen3 8B 구조화 출력(JSON) 50건 성공률(thinking on/off)
+- Qwen3.5-9B 구조화 출력(JSON) 50건 성공률(thinking on/off)
 - `deploy.sh` 작성(맥북에서 한 번에 맥미니 pull + 재시작)
 - 완료 기준: **맥북에서** 맥미니의 채팅과 임베딩 API를 curl로 호출 성공, 측정 결과 기록
 
 **Phase 1. 공통 엔진 + 스터디 Q&A**
+- **완료 (2026-11-13)**: Qwen3-Embedding-0.6B 기준 Q&A 10문항 모두 정답 문서 인용(10/10), 검색 15문항 hit@5 1.00, MRR 0.900(검색 지시문 적용), 재실행 시 변경분만 처리. 맥미니에서 실제 study 노트 인덱싱 동작. 상세: [측정 결과](results/phase0-phase1.md), [Q&A 답변](results/qa-qwen3.5-9b-qwen3emb0.6b.md)
 - study 노트부터 인덱싱(구조가 있어 검증이 쉽고 데모 데이터로 재사용, 사적 데이터는 시스템 안정 후 투입)
 - 완료 기준: 노트 30개로 질문 10개에 출처와 함께 답함, 재실행 시 변경분만 처리
 
@@ -299,8 +302,8 @@
 
 ## 19. 확인되지 않은 가정
 
-- Lemonade macOS의 임베딩 엔드포인트 제공 여부
-- 임베딩 모델의 차원 수와 한국어, 한영 교차 검색 성능
+- ~~Lemonade macOS의 임베딩 엔드포인트 제공 여부~~ → 확인됨(2026-11-12)
+- ~~임베딩 모델의 차원 수와 한국어, 한영 교차 검색 성능~~ → 1024차원, 같은 뜻 한/영 문장 코사인 0.860(2026-11-13). 실제 영어 문서 검색은 Phase 1.5에서 측정
 - 원문 임베딩에서 장르별로 뭉치는 현상의 실제 정도
 - 모델별 메모리 사용량(추정치, 실측 필요)
 - 기존 메모와 스터디 노트의 형식, 개수, 날짜 정보 신뢰도
